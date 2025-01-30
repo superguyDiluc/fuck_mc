@@ -1,4 +1,4 @@
-import cv2, utils
+import cv2
 
 suit = {
     (1, 1): "凝夜冰霜",
@@ -42,7 +42,7 @@ def get_matched_degree(path1, path2):
     @return
     matched_degree: float, template's matched degree in target, the closer it's to 1.0, the better the match
     """
-    # 加载目标图片
+    # load target image
     target = cv2.imread(path1, cv2.IMREAD_COLOR)
     template = cv2.imread(path2, cv2.IMREAD_COLOR)
 
@@ -50,7 +50,7 @@ def get_matched_degree(path1, path2):
         print(f"错误：无法加载目标图片")
         return False
 
-    # 使用模板匹配
+    # match with template
     result = cv2.matchTemplate(target, template, cv2.TM_SQDIFF_NORMED)
 
     return cv2.minMaxLoc(result)[0] # 返回min_val
