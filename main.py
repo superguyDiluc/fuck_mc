@@ -1,4 +1,8 @@
-import pyautogui, time, utils, judge, config
+import pyautogui, time
+import scripts.utils as utils
+import scripts.judge as judge
+import scripts.config as config
+import threading, keyboard
 import pygetwindow as gw
 
 def save_target_image(x, y):
@@ -6,7 +10,7 @@ def save_target_image(x, y):
     Pass in x and y and save the target needed to recognized picture
     @params:
     x: int, left position
-    y: int, top position
+    y: int, top positionq
     @return:
     im_path: str, saved image path
     """
@@ -185,69 +189,95 @@ def create_scroller():
         i = (i + 1) % 3
     return scroll
 
-
-# Focus on Wuthering Waves
-try:
-    window = gw.getWindowsWithTitle("鸣潮")[0]
-    if window:
-        window.activate()
-        time.sleep(1)
-    else:
+def manager_shenghai():
+    try:
+        window = gw.getWindowsWithTitle("鸣潮")[0]
+        if window:
+            window.activate()
+            time.sleep(1)
+        else:
+            print('未找到鸣潮')
+    except IndexError:
         print('未找到鸣潮')
-except IndexError:
-    print('未找到鸣潮')
 
-# start project
-try:
-    # Anchor the position through the icon
-    shenghai_image_path = utils.complete_path('images\\shenghai.png')
-    shenghai_position = pyautogui.locateOnScreen(shenghai_image_path, confidence=0.6)
+    # start project
+    try:
+        # Anchor the position through the icon
+        shenghai_image_path = utils.complete_path('images\\shenghai.png')
+        shenghai_position = pyautogui.locateOnScreen(shenghai_image_path, confidence=0.6)
 
-    if shenghai_position:
-        scroller = create_scroller()
-        while check_is_bottom(shenghai_position.left, shenghai_position.top):
-            # the first target position
-            x, y = shenghai_position.left + 220, shenghai_position.top + 180
+        if shenghai_position:
+            scroller = create_scroller()
+            while check_is_bottom(shenghai_position.left, shenghai_position.top):
+                # the first target position
+                x, y = shenghai_position.left + 220, shenghai_position.top + 180
 
-            # every row has six items
-            for _ in range(6):
-                pyautogui.click(x, y)
-                time.sleep(0.2)
+                # every row has six items
+                for _ in range(6):
+                    pyautogui.click(x, y)
+                    time.sleep(0.2)
 
-                # if ignore handled target
-                target_handle_path = save_target_handle_image(shenghai_position.left, shenghai_position.top)
+                    # if ignore handled target
+                    target_handle_path = save_target_handle_image(shenghai_position.left, shenghai_position.top)
+                    
+                    if config.ignore_handled and check_is_locked(target_handle_path):
+                        print('DEBUG: 已锁定')
+                        # change left position
+                        x += 138
+                        continue
+                    elif config.ignore_handled and check_is_discarded(target_handle_path):
+                        print('DEBUG: 已弃置')
+                        # change left position
+                        x += 138
+                        continue
+
+                    target_path = save_target_image(x, y)
+                    target_attr_path = save_target_attr_image(shenghai_position.left, shenghai_position.top)
+                    target_COST_path = save_target_COST_image(shenghai_position.left, shenghai_position.top)
+
+                    suit_name = get_suit_name(target_path)
+                    attr_name = get_attr_name(target_attr_path)
+                    COST = get_COST(target_COST_path)
+
+                    print(f'DEBUG: {suit_name} {attr_name} {COST}')
+
+                    # start selection
+                    start_selection(target_handle_path, suit_name, attr_name, COST)
+
+                    # change left position
+                    x += 138
                 
-                if config.ignore_handled and check_is_locked(target_handle_path):
-                    print('DEBUG: 已锁定')
-                    # change left position
-                    x += 138
-                    continue
-                elif config.ignore_handled and check_is_discarded(target_handle_path):
-                    print('DEBUG: 已弃置')
-                    # change left position
-                    x += 138
-                    continue
+                # refresh left position
+                x = shenghai_position.left + 220
 
-                target_path = save_target_image(x, y)
-                target_attr_path = save_target_attr_image(shenghai_position.left, shenghai_position.top)
-                target_COST_path = save_target_COST_image(shenghai_position.left, shenghai_position.top)
+                # scroll the screen
+                scroller()
+    except pyautogui.ImageNotFoundException:
+        print('未打开背包声骸界面')
+    except KeyboardInterrupt:
+        print('手动终止脚本')
 
-                suit_name = get_suit_name(target_path)
-                attr_name = get_attr_name(target_attr_path)
-                COST = get_COST(target_COST_path)
+def check_for_exit():
+    """
+    Check if need to exit script
+    """
+    while True:
+        if keyboard.is_pressed('q'):
+            print("Exiting...")
+            break
+        time.sleep(0.05)
 
-                print(f'DEBUG: {suit_name} {attr_name} {COST}')
+def start_project():
+    # 创建并启动manager_shenghai线程
+    manager_thread = threading.Thread(target=manager_shenghai)
+    manager_thread.daemon = True
+    manager_thread.start()
 
-                # start selection
-                start_selection(target_handle_path, suit_name, attr_name, COST)
+    # 创建并启动检查退出线程
+    exit_thread = threading.Thread(target=check_for_exit)
+    exit_thread.start()
 
-                # change left position
-                x += 138
-            
-            # refresh left position
-            x = shenghai_position.left + 220
+    # 等待退出线程结束
+    exit_thread.join()
 
-            # scroll the screen
-            scroller()
-except pyautogui.ImageNotFoundException:
-    print('未打开背包声骸界面')
+start_project()

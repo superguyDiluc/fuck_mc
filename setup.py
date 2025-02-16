@@ -1,13 +1,17 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='fuck_mc',  # 项目的名称
-    version='0.1',  # 项目的版本
-    packages=find_packages(),  # 自动查找所有的包
+    name='fuck_mc',
+    version='0.1',
+    description='A Tool For Shenghai',
+    author='Diluc',
+    author_email='1727327536@qq.com',
+    packages=find_packages(),
     install_requires=[  # 指定依赖库
         'pyautogui',
         'opencv-python',
         'pyscreeze',
-        'pillow'
-    ],
+        'pillow',
+        'keyboard'
+    ]
 )

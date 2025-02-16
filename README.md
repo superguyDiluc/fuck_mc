@@ -16,3 +16,4 @@ pip install .
 # 使用方法
 - 将界面调整到背包声骸界面，建议使用时间排序
 - 在scripts文件夹中的config.py中可以更改你需要筛选的相应的套装、COST、属性等等，自定义配置
+- 执行`python main.py`即可运行

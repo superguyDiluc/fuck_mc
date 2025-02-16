@@ -1,4 +1,5 @@
 import os
+from pynput import keyboard
 
 def get_project_root():
     """
