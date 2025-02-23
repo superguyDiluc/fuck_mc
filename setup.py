@@ -12,6 +12,7 @@ setup(
         'opencv-python',
         'pyscreeze',
         'pillow',
-        'keyboard'
+        'keyboard',
+        'pynput'
     ]
 )
